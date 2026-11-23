@@ -1,0 +1,58 @@
+{
+  "fictional": true,
+  "brand": "Northstar Outfitters",
+  "purpose": "Offline Phase 2 detector evaluation",
+  "version": 1,
+  "random_seed": 18273,
+  "first_date": "2026-08-25",
+  "last_date": "2026-11-22",
+  "campaign_count": 16,
+  "observed_campaign_days": 1431,
+  "scenarios": [
+    {
+      "group": "stable",
+      "campaign_ids": ["NS-G01", "NS-G02", "NS-M01", "NS-M02"],
+      "period": ["2026-08-25", "2026-11-22"],
+      "expected_pattern": "Daily and weekday variation around steady campaign baselines"
+    },
+    {
+      "group": "declining_efficiency",
+      "campaign_ids": ["NS-G03", "NS-M03", "NS-M04"],
+      "period": ["2026-09-29", "2026-11-22"],
+      "expected_pattern": "Gradual CPC inflation and weaker purchase probability, increasing CPA"
+    },
+    {
+      "group": "conversion_decline",
+      "campaign_ids": ["NS-G04", "NS-M05"],
+      "period": ["2026-10-19", "2026-11-22"],
+      "expected_pattern": "Step decrease in purchase probability with otherwise similar traffic and click costs"
+    },
+    {
+      "group": "potential_scaling",
+      "campaign_ids": ["NS-G05", "NS-M06"],
+      "period": ["2026-09-29", "2026-11-22"],
+      "expected_pattern": "Increasing delivery and improving purchase probability with stable click costs"
+    },
+    {
+      "group": "inefficient_spend",
+      "campaign_ids": ["NS-G06", "NS-M07"],
+      "period": ["2026-10-23", "2026-11-22"],
+      "expected_pattern": "Abrupt rise in volume and click cost paired with reduced conversion probability"
+    },
+    {
+      "group": "data_quality",
+      "campaign_ids": ["NS-G07", "NS-M08"],
+      "expected_pattern": "Missing campaign-days within otherwise present coverage",
+      "campaign_periods": {
+        "NS-G07": ["2026-10-08", "2026-10-11"],
+        "NS-M08": ["2026-11-03", "2026-11-07"]
+      }
+    },
+    {
+      "group": "low_volume",
+      "campaign_ids": ["NS-G08"],
+      "period": ["2026-08-25", "2026-11-22"],
+      "expected_pattern": "Sparse purchase counts and many zero-purchase observations"
+    }
+  ]
+}

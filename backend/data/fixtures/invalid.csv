@@ -1,0 +1,4 @@
+date,platform,campaign_id,campaign_name,impressions,clicks,spend,attributed_purchases,attributed_purchase_value,conversion_action,attribution_method,attribution_window,date_basis,currency
+2026-11-21,GOOGLE_ADS,DEMO-BAD-1,Fictional Invalid Spend,600,30,-15,2,40,PURCHASE,LAST_CLICK,7D_CLICK,INTERACTION_DATE,USD
+2026-11-21,META_ADS,DEMO-BAD-2,Fictional Incompatible Definition,1000,20,15,1,50,PURCHASE,LAST_CLICK,7D_CLICK_1D_VIEW,CONVERSION_DATE,USD
+2026-11-22,GOOGLE_ADS,,Fictional Missing ID,600,1000,ten,0,0,PURCHASE,LAST_CLICK,7D_CLICK,INTERACTION_DATE,EUR

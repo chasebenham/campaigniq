@@ -1,0 +1,7 @@
+import type { ComponentProps } from "react"
+
+import { cn } from "@/lib/utils"
+
+export function Card({ className, ...props }: ComponentProps<"section">) {
+  return <section data-slot="card" className={cn("rounded-xl border border-border bg-card text-card-foreground shadow-[0_1px_2px_#17255408]", className)} {...props} />
+}

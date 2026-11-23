@@ -1,0 +1,3 @@
+date,platform,campaign_id,campaign_name,impressions,clicks,spend,attributed_purchases,attributed_purchase_value,conversion_action,attribution_method,attribution_window,date_basis,currency
+2026-11-21,GOOGLE_ADS,DEMO-IMPORT-G,Fictional Import Example Search,4200,180,165.30,7,841.40,PURCHASE,LAST_CLICK,7D_CLICK,INTERACTION_DATE,USD
+2026-11-22,GOOGLE_ADS,DEMO-IMPORT-G,Fictional Import Example Search,3200,90,83.01,0,0,PURCHASE,LAST_CLICK,7D_CLICK,INTERACTION_DATE,USD
