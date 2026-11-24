@@ -5,7 +5,8 @@ from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from app.ai_config import AISettings
-from app.ai_contract import AnalysisOutput, MAX_EVIDENCE_BYTES, PROMPT_VERSION, SCHEMA_VERSION, build_snapshot, references
+from app.ai_contract import AnalysisOutput, MAX_EVIDENCE_BYTES, PROMPT_VERSION, SCHEMA_VERSION, build_snapshot, provider_payload
+from app.ai_diagnostics import diagnostic_artifact
 from app.ai_models import AIAnalysis
 from app.ai_provider import ProviderFailure
 from app.db import lock_performance_writes
@@ -62,7 +63,7 @@ def reserve(db: Session, finding_id: int, settings: AISettings, *, regenerate_fr
         raise AnalysisRejection(409, "AI_STALE_EVIDENCE", "Run performance analysis and choose a current finding.")
 
     snapshot = build_snapshot(finding)
-    if len(canonical_json([snapshot, list(references(snapshot))]).encode()) > MAX_EVIDENCE_BYTES:
+    if len(canonical_json(provider_payload(snapshot)).encode()) > MAX_EVIDENCE_BYTES:
         raise AnalysisRejection(422, "AI_EVIDENCE_TOO_LARGE", "This finding exceeds the AI evidence size limit.")
     digest = fingerprint(snapshot)
     now = datetime.now(timezone.utc)
@@ -119,6 +120,10 @@ def finish(db: Session, reservation: Reservation, output: AnalysisOutput | None,
         record.status = "FAILED"
         record.error_code = failure.code
         record.error_message = str(failure)
+        record.validation_diagnostic = diagnostic_artifact(
+            failure.diagnostic, status=failure.provider_status, schema_version=record.schema_version,
+            evidence_fingerprint=record.evidence_fingerprint, attempt_id=record.id,
+        )
     else:
         finding = db.get(DetectionFinding, record.finding_id)
         matches = (

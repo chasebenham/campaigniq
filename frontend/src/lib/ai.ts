@@ -35,6 +35,7 @@ interface AnalysisOutput {
   executive_summary: string
   business_impact_assessment: string
   evidence_references: string[]
+  numeric_claims?: { reference: string; value: string }[]
   possible_explanations: string[]
   missing_information: string[]
   recommended_action_type: Action

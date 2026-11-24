@@ -35,3 +35,4 @@ class AIAnalysis(Base):
     provider_usage: Mapped[dict | None] = mapped_column(JSON)
     error_code: Mapped[str | None] = mapped_column(String(50))
     error_message: Mapped[str | None] = mapped_column(String(300))
+    validation_diagnostic: Mapped[dict | None] = mapped_column(JSON)

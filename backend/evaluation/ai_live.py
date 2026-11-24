@@ -1,4 +1,4 @@
-"""Run at most three fictional campaign analyses with one optional retry each."""
+"""Run one explicitly selected fictional campaign analysis without retries."""
 
 import argparse
 import json
@@ -7,13 +7,11 @@ from urllib.parse import urlsplit
 
 import httpx2 as httpx
 
+from app.ai_contract import SCHEMA_VERSION
+
 SCENARIOS = {
-    "CPA deterioration": ("D-01", "New Customer Acquisition"),
-    "Potential scaling": ("D-05", "All-Weather Gear Shopping"),
-    "Data quality": ("D-06", "Alpine Collection Video"),
+    "D-01": "New Customer Acquisition", "D-05": "All-Weather Gear Shopping", "D-06": "Alpine Collection Video",
 }
-RETRYABLE = {"AI_PROVIDER_TIMEOUT", "AI_PROVIDER_UNAVAILABLE", "AI_INVALID_OUTPUT"}
-ACCOUNT_ERRORS = {"AI_PROVIDER_AUTH", "AI_PROVIDER_PERMISSION", "AI_PROVIDER_MODEL_UNAVAILABLE", "AI_PROVIDER_QUOTA"}
 
 
 def fictional(finding: dict) -> bool:
@@ -27,56 +25,50 @@ def history(client: httpx.Client, finding_id: int) -> list[dict]:
     return result.json()["items"]
 
 
-def run(client: httpx.Client) -> dict:
+def selected_finding(client: httpx.Client, policy: str) -> dict:
+    response = client.get("insights", params={"policy_id": policy, "scope": "current", "page_size": 100})
+    response.raise_for_status()
+    for item in response.json()["items"]:
+        if fictional(item) and item["campaign_snapshot"]["campaign_name"] == SCENARIOS[policy]:
+            return item
+    raise SystemExit(f"The exact fictional {policy} scenario is unavailable among current findings.")
+
+
+def run(client: httpx.Client, policy: str) -> dict:
     configuration = client.get("ai/status")
     configuration.raise_for_status()
-    if configuration.json()["provider_max_attempts"] != 1:
+    provider = configuration.json()
+    if provider["provider_max_attempts"] != 1:
         raise SystemExit("Start the API with AI_PROVIDER_MAX_ATTEMPTS=1 to bound the smoke test.")
-    check = client.post("ai/status/check")
-    check.raise_for_status()
-    provider = check.json()
-    report = {"model": provider["model"], "access": provider["provider_status"],
-              "provider_error": provider["provider_error_code"], "scenarios": {}}
-    if provider["provider_status"] != "ACCESSIBLE":
-        return report
-
-    for name, (policy, preferred) in SCENARIOS.items():
-        response = client.get("insights", params={"policy_id": policy, "scope": "current", "page_size": 100})
-        response.raise_for_status()
-        options = [entry for entry in response.json()["items"] if fictional(entry)]
-        ordered = sorted(options, key=lambda item: item["campaign_snapshot"]["campaign_name"] != preferred)
-        if not ordered:
-            report["scenarios"][name] = {"status": "NO_ELIGIBLE_FICTIONAL_FINDING"}
-            continue
-        finding = ordered[0]
-        finding_id = finding["id"]
-        entry = report["scenarios"][name] = {
-            "finding_id": finding_id, "run_id": finding["run_id"], "campaign": finding["campaign_snapshot"]["campaign_name"],
-            "attempts": [], "human_review": "PENDING",
-        }
-        for attempt in range(2):
-            before = {record["id"] for record in history(client, finding_id)}
-            result = client.post(f"insights/{finding_id}/analyses")
-            if result.status_code in {200, 201, 202}:
-                record = result.json()
-                entry["status"] = record["status"]
-                entry["attempts"].append({"http": result.status_code, "analysis": record})
-                break
-            error = result.json().get("error", {}).get("code", "UNKNOWN_ERROR")
-            records = [record for record in history(client, finding_id) if record["id"] not in before]
-            entry["attempts"].append({"http": result.status_code, "error": error, "analysis": records[0] if records else None})
-            entry["status"] = error
-            if error in ACCOUNT_ERRORS:
-                return report
-            if error not in RETRYABLE or attempt == 1:
-                break
-    return report
+    if not provider["enabled"]:
+        raise SystemExit("AI must be enabled and configured for live verification.")
+    if policy != "D-01":
+        cpa = selected_finding(client, "D-01")
+        if not any(item["is_current"] and item["status"] == "COMPLETED" and item["schema_version"] == SCHEMA_VERSION
+                   for item in history(client, cpa["id"])):
+            raise SystemExit("The CPA case must pass and persist before later scenarios.")
+    finding = selected_finding(client, policy)
+    finding_id = finding["id"]
+    previous = history(client, finding_id)
+    if any(item["schema_version"] == SCHEMA_VERSION for item in previous):
+        raise SystemExit("This scenario already has an attempt under the current schema. No request was made.")
+    result = client.post(f"insights/{finding_id}/analyses")
+    if result.status_code in {200, 201, 202}:
+        record, error = result.json(), None
+    else:
+        error = result.json().get("error", {}).get("code", "UNKNOWN_ERROR")
+        old_ids = {item["id"] for item in previous}
+        record = next((item for item in history(client, finding_id) if item["id"] not in old_ids), None)
+    return {"model": provider["model"], "policy": policy, "campaign": SCENARIOS[policy], "finding_id": finding_id,
+            "http": result.status_code, "status": record["status"] if record else error,
+            "error": error, "analysis": record, "human_review": "PENDING"}
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--api", default="http://127.0.0.1:8118/api/v1")
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--scenario", choices=SCENARIOS, required=True)
     parser.add_argument("--execute", action="store_true", help="Explicitly authorize the bounded paid requests.")
     args = parser.parse_args()
     url = urlsplit(args.api)
@@ -86,10 +78,9 @@ def main() -> None:
     # Reserve a new writable report before issuing any potentially billable request.
     with args.output.open("x", encoding="utf-8") as target:
         with httpx.Client(base_url=args.api.rstrip("/") + "/", timeout=65, trust_env=False) as client:
-            report = run(client)
+            report = run(client, args.scenario)
         target.write(json.dumps(report, indent=2) + "\n")
-    print(json.dumps({"model": report["model"], "access": report["access"],
-                      "results": {name: item["status"] for name, item in report["scenarios"].items()}}))
+    print(json.dumps({key: report[key] for key in ("model", "policy", "http", "status", "error")}))
 
 
 if __name__ == "__main__":

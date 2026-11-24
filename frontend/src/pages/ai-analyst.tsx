@@ -200,14 +200,15 @@ function AnalysisResult({ analysis }: { analysis: Analysis }) {
     </Card>}
     <div className="evidence-grid">
       <Card className="evidence-card"><PanelHeading title="Evidence references" description="Values from the saved evidence snapshot." />
-        <dl className="evidence-values">{analysis.evidence_references.map(({ path, value }) => <Reference key={path} path={path} value={value} />)}</dl>
+        <dl className="evidence-values">{analysis.evidence_references.map(({ path, value }) => <Reference key={path} path={path} value={value}
+          claim={output.numeric_claims?.find((item) => item.reference === path)?.value} />)}</dl>
       </Card>
       <Card className="evidence-card"><PanelHeading title="Risks and limitations" /><TextList items={output.risks_and_limitations} /></Card>
     </div>
   </>
 }
 
-function Reference({ path, value }: { path: string; value: string | number | boolean }) {
+function Reference({ path, value, claim }: { path: string; value: string | number | boolean; claim?: string }) {
   const parts = path.split(".")
   const key = parts.at(-1) ?? path
   const isMetric = parts[1] === "metrics" && Object.hasOwn(metricNames, key)
@@ -218,5 +219,7 @@ function Reference({ path, value }: { path: string; value: string | number | boo
     : targetMetric ? `Target ${metricNames[targetMetric]}` : `${evidenceLabel(parts[0])} · ${evidenceLabel(key)}`
   const formatted = metric && typeof value !== "boolean" ? formatMetric(metric, value as Decimal | number)
     : evidenceValue(key, value)
-  return <div><dt>{title}<code className="table-secondary">{path}</code></dt><dd>{formatted}</dd></div>
+  return <div><dt>{title}<code className="table-secondary">{path}</code></dt><dd>{formatted}
+    {claim && <small className="table-secondary">Verified AI citation {claim}</small>}
+  </dd></div>
 }

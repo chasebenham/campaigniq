@@ -27,3 +27,5 @@ Revision `20261123_0002` adds detection runs, findings and suppressions. Runs st
 Revision `20261123_0003` adds `ai_analyses`. A row references an existing finding and contains the evidence fingerprint, canonical snapshot, version metadata, status and outcome. A partial unique index prevents concurrent pending or completed attempts for the same finding, evidence, model and versions. Failed and stale records remain available for history.
 
 Revision `20261123_0004` preserves multiple completed versions after explicit regeneration. Pending attempts remain unique for the same analysis identity, and a request UUID is unique per finding. Downgrading to the earlier uniqueness rule stops if that would conflict with saved versions.
+
+Revision `20261124_0005` adds a nullable redacted diagnostic to AI attempts. New rejection records can be reviewed with the persisted evidence snapshot and archived schema version. Historical rows retain their original status and metadata.

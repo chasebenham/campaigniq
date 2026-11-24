@@ -5,9 +5,8 @@ import time
 from openai import APIConnectionError, APIError, APIStatusError, APITimeoutError, OpenAI
 
 from app.ai_config import AISettings
-from app.ai_contract import (
-    AnalysisOutput, SYSTEM_INSTRUCTIONS, coverage_references, provider_schema, references, required_references,
-)
+from app.ai_contract import AnalysisOutput, SYSTEM_INSTRUCTIONS, parse_output, provider_payload, provider_schema
+from app.ai_diagnostics import Diagnostic, OutputRejection, safe_status
 from app.detection import canonical_json
 
 REQUEST_TIMEOUT = 25.0
@@ -16,17 +15,21 @@ CHECK_TTL = 60
 
 
 class ProviderFailure(Exception):
-    def __init__(self, code: str, message: str, status: int, usage: dict | None = None):
+    def __init__(self, code: str, message: str, status: int, usage: dict | None = None, *,
+                 diagnostic: Diagnostic | None = None, provider_status: str | None = None):
         super().__init__(message)
         self.code = code
         self.status = status
         self.usage = usage
+        self.diagnostic = diagnostic or Diagnostic("PROVIDER", code, "/", "An available provider and a response.")
+        self.provider_status = safe_status(provider_status)
 
 
 @dataclass(frozen=True)
 class ProviderResult:
     output: AnalysisOutput | dict
     usage: dict | None
+    provider_status: str = "completed"
 
 
 @dataclass(frozen=True)
@@ -86,13 +89,7 @@ class OpenAIProvider:
         return self._remember(settings, ProviderCheck(True))
 
     def generate(self, settings: AISettings, snapshot: dict) -> ProviderResult:
-        payload = {
-            "finding_id": snapshot["finding_id"], "evidence": snapshot["evidence"],
-            "allowed_evidence_references": list(references(snapshot)),
-            "required_evidence_references": required_references(snapshot),
-        }
-        if snapshot["evidence"].get("rule", {}).get("category") == "DATA_QUALITY":
-            payload["coverage_evidence"] = coverage_references(snapshot)
+        payload = provider_payload(snapshot)
         schema = provider_schema(snapshot)
         model = settings.selected_model
         options = {"reasoning": {"effort": "low"}} if model == "gpt-6-luna" or model.startswith("gpt-6-luna-") else {}
@@ -121,12 +118,20 @@ class OpenAIProvider:
                 if usage is not None:
                     usage.update(model=response.model, service_tier=response.service_tier, attempts=attempt + 1)
                 if response.status != "completed" or not response.output_text:
-                    raise ProviderFailure("AI_INVALID_OUTPUT", "OpenAI returned an incomplete structured result. You can retry.", 502, usage)
+                    reason = getattr(response.incomplete_details, "reason", None)
+                    rule = "RESPONSE_INCOMPLETE" if response.status != "completed" else "RESPONSE_NO_TEXT"
+                    diagnostic = Diagnostic("RESPONSE", rule, "/status", "A completed response containing structured text.", {
+                        "reason": reason if reason in {"max_output_tokens", "content_filter"} else "unavailable",
+                        "text_present": bool(response.output_text),
+                    })
+                    raise ProviderFailure("AI_INVALID_OUTPUT", "OpenAI did not return a complete analysis.", 502, usage,
+                                          diagnostic=diagnostic, provider_status=response.status)
                 try:
-                    output = AnalysisOutput.model_validate_json(response.output_text)
-                except ValueError as error:
-                    raise ProviderFailure("AI_INVALID_OUTPUT", "OpenAI returned an unreadable structured result. You can retry.", 502, usage) from error
-                return ProviderResult(output, usage)
+                    output = parse_output(response.output_text)
+                except OutputRejection as error:
+                    raise ProviderFailure("AI_INVALID_OUTPUT", "The AI response did not match the required structure.", 502, usage,
+                                          diagnostic=error.diagnostic, provider_status=response.status) from None
+                return ProviderResult(output, usage, response.status)
         raise AssertionError("The bounded provider loop did not resolve.")
 
 

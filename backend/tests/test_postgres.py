@@ -20,7 +20,7 @@ def test_migrations_are_reversible_and_match_models(postgres):
         command.check(config)
     with engine.begin() as connection:
         config.attributes["connection"] = connection
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "20261123_0004"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "20261124_0005"
         assert set(inspect(connection).get_table_names()) >= {
             "campaigns", "daily_campaign_performance", "data_imports", "import_validation_errors",
             "detection_runs", "detection_findings", "detection_suppressions", "ai_analyses",

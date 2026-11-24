@@ -10,7 +10,8 @@ from app.ai_analysis import (
     INTERRUPTED_MESSAGE, PENDING_LEASE, AnalysisRejection, ensure_utc, finding_is_current, finish, latest_completed, reserve,
 )
 from app.ai_config import AISettings, get_ai_settings
-from app.ai_contract import AnalysisOutput, EvidenceValidationError, LegacyAnalysisOutput, build_snapshot, references, validate_output
+from app.ai_contract import AnalysisOutput, DetailedAnalysisOutput, LegacyAnalysisOutput, build_snapshot, cited_paths, references, validate_output
+from app.ai_diagnostics import OutputRejection
 from app.ai_models import AIAnalysis
 from app.ai_provider import OpenAIProvider, ProviderFailure, get_ai_provider
 from app.detection import fingerprint
@@ -58,7 +59,7 @@ class AnalysisView(BaseModel):
     status: Literal["PENDING", "COMPLETED", "STALE", "FAILED"]
     created_at: datetime
     finished_at: datetime | None
-    structured_output: AnalysisOutput | LegacyAnalysisOutput | None
+    structured_output: AnalysisOutput | DetailedAnalysisOutput | LegacyAnalysisOutput | None
     evidence_references: list[EvidenceReference]
     provider_usage: dict | None
     error_code: str | None
@@ -70,7 +71,7 @@ def analysis_view(record: AIAnalysis, current_id: int | None) -> AnalysisView:
     expired = record.status == "PENDING" and ensure_utc(record.created_at) + PENDING_LEASE <= datetime.now(timezone.utc)
     output = record.structured_output
     values = references(record.evidence_snapshot) if output else {}
-    grounded = [EvidenceReference(path=path, value=values[path]) for path in output["evidence_references"]] if output else []
+    grounded = [EvidenceReference(path=path, value=values[path]) for path in cited_paths(output)] if output else []
     return AnalysisView(
         id=record.id, finding_id=record.finding_id, evidence_fingerprint=record.evidence_fingerprint,
         model=record.model, prompt_version=record.prompt_version, schema_version=record.schema_version,
@@ -130,18 +131,18 @@ def create_analysis(finding_id: ID, db: DB, settings: Configuration, provider: P
 
     # The reservation and evidence snapshot are durable before any provider call.
     db.commit()
-    output = usage = failure = None
+    output = usage = failure = provider_status = None
     try:
         provider_result = provider.generate(settings, reservation.snapshot)
         usage = provider_result.usage
+        provider_status = provider_result.provider_status
         output = validate_output(provider_result.output, reservation.snapshot)
     except ProviderFailure as error:
         failure = error
         usage = error.usage
-    except EvidenceValidationError as error:
-        failure = ProviderFailure("AI_INVALID_OUTPUT", str(error), 502)
-    except (ValueError, TypeError):
-        failure = ProviderFailure("AI_INVALID_OUTPUT", "The AI response did not pass evidence validation. You can retry.", 502)
+    except OutputRejection as error:
+        failure = ProviderFailure("AI_INVALID_OUTPUT", f"The AI response failed validation ({error.diagnostic.rule}).", 502,
+                                  diagnostic=error.diagnostic, provider_status=provider_status)
 
     record = finish(db, reservation, output, usage, failure)
     result = analysis_view(record, record.id if record.status == "COMPLETED" else None)

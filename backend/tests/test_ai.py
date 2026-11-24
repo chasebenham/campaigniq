@@ -42,6 +42,7 @@ def sample_output(target_id: int, **changes):
         "secondary_metrics": [],
         "risks_and_limitations": ["Attribution cannot establish causality or incrementality."],
         "confidence_rationale": "The movement is measured and the cause remains uncertain.",
+        "numeric_claims": [],
         **changes,
     }
 
@@ -176,11 +177,12 @@ def test_provider_timeout_is_audited_and_rate_limit_blocks_retries(client, ai_de
 
 def test_data_quality_output_requires_measurement_first():
     snapshot = {"finding_id": 1, "evidence": {
-        "rule": {"category": "DATA_QUALITY"}, "evidence_quality": "BLOCKED", "current": {"observed_days": 5},
+        "rule": {"category": "DATA_QUALITY"}, "evidence_quality": "BLOCKED",
+        "current": {"observed_days": 5, "missing_dates": ["2026-11-10"]},
     }}
     good = sample_output(1, evidence_references=["current.observed_days"])
     assert validate_output(good, snapshot).recommended_action_type == "INVESTIGATE"
-    with pytest.raises(ValueError, match="data-quality"):
+    with pytest.raises(ValueError, match="QUALITY_ACTION"):
         validate_output({**good, "recommended_action_type": "CONSIDER_REALLOCATION"}, snapshot)
 
 
@@ -227,7 +229,7 @@ def test_sdk_response_passes_evidence_contract_and_persists_with_typed_provider_
         payload = json.loads(body["input"][0]["content"])
         assert payload["evidence"]["campaign"]["campaign_name"] == "Fixture Search"
         assert set(payload["required_evidence_references"]) == {
-            f"{period}.metrics.{metric}" for period in ("current", "baseline") for metric in ("cpc", "purchase_cvr")
+            f"{period}.metrics.{metric}" for period in ("current", "baseline") for metric in ("cpa", "cpc", "purchase_cvr")
         }
         assert set(payload["evidence"]["cpa_drivers"]) == {"cpc_change_pct", "purchase_cvr_change_pct"}
         return sdk_response(sample_output(finding["id"]))

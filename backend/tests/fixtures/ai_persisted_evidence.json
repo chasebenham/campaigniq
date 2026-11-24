@@ -1,0 +1,324 @@
+[
+  {
+    "finding_id": 3,
+    "finding_fingerprint": "c6c065dae8c1221b4ce69ae4b196ef8f4655f0c3f8a3eca5aef448664d655090",
+    "evidence": {
+      "campaign": {
+        "campaign_name": "New Customer Acquisition",
+        "platform": "GOOGLE_ADS",
+        "objective": "PURCHASES"
+      },
+      "rule": {
+        "policy_id": "D-01",
+        "policy_version": "1.0.0",
+        "category": "PERFORMANCE_RISK",
+        "severity": "HIGH",
+        "summary": "CPA deterioration",
+        "classification_reason": "The deviation or current spend meets the elevated exposure threshold."
+      },
+      "current": {
+        "start": "2026-11-10",
+        "end": "2026-11-16",
+        "calendar_days": 7,
+        "expected_days": 7,
+        "observed_days": 7,
+        "fictional_days": 7,
+        "missing_dates": [],
+        "complete": true,
+        "metrics": {
+          "impressions": 35469,
+          "clicks": 1663,
+          "spend": "3416.1800",
+          "attributed_purchases": "58.000000",
+          "attributed_purchase_value": "6441.0000",
+          "ctr": "4.688601313823338690123770052722095350870",
+          "cpc": "2.054227300060132291040288634996993385448",
+          "cpm": "96.31452817953706053173193492909301079816",
+          "purchase_cvr": "3.487672880336740829825616355983162958509",
+          "cpa": "58.89965517241379310344827586206896551724",
+          "roas": "1.885439291840593879713598229601484699284",
+          "attributed_aov": "111.0517241379310344827586206896551724138"
+        }
+      },
+      "baseline": {
+        "start": "2026-11-03",
+        "end": "2026-11-09",
+        "calendar_days": 7,
+        "expected_days": 7,
+        "observed_days": 7,
+        "fictional_days": 7,
+        "missing_dates": [],
+        "complete": true,
+        "metrics": {
+          "impressions": 34920,
+          "clicks": 1595,
+          "spend": "2941.2100",
+          "attributed_purchases": "60.000000",
+          "attributed_purchase_value": "6674.5000",
+          "ctr": "4.567583046964490263459335624284077892325",
+          "cpc": "1.844018808777429467084639498432601880878",
+          "cpm": "84.22709049255441008018327605956471935853",
+          "purchase_cvr": "3.761755485893416927899686520376175548589",
+          "cpa": "49.02016666666666666666666666666666666667",
+          "roas": "2.269304129932918764726082122663801632661",
+          "attributed_aov": "111.2416666666666666666666666666666666667"
+        }
+      },
+      "targets": {
+        "target_cpa": "35.0000",
+        "target_roas": "3.1000"
+      },
+      "thresholds": {
+        "min_clicks": 100,
+        "min_purchases": "10",
+        "high_risk_spend": "500",
+        "high_risk_deviation_pct": "35",
+        "cpa_increase_pct": "20"
+      },
+      "observations": {
+        "cpa_change_pct": "20.15392679695865260239481545772447159620"
+      },
+      "cpa_drivers": {
+        "cpc_change_pct": "11.39947652822855233761820382836330795112",
+        "purchase_cvr_change_pct": "-7.286029264381639607135698536780918019627"
+      },
+      "reporting_definitions": [
+        {
+          "conversion_action": "PURCHASE",
+          "attribution_method": "LAST_CLICK",
+          "attribution_window": "7D_CLICK",
+          "date_basis": "INTERACTION_DATE"
+        }
+      ],
+      "limitations": [
+        "The comparison describes a change in observed acquisition cost. The evidence does not establish its cause.",
+        "Purchase credit and value are platform-attributed. This evidence cannot establish incremental revenue, profit, or unique customer counts."
+      ],
+      "related_quality_flags": [],
+      "evidence_quality": "SUFFICIENT"
+    }
+  },
+  {
+    "finding_id": 6,
+    "finding_fingerprint": "e37cb5a6782032850f34587d149c69c42ebd2faf4e99fe182cc184cd3f0f0fff",
+    "evidence": {
+      "campaign": {
+        "campaign_name": "All-Weather Gear Shopping",
+        "platform": "GOOGLE_ADS",
+        "objective": "PURCHASES"
+      },
+      "rule": {
+        "policy_id": "D-05",
+        "policy_version": "1.0.0",
+        "category": "OPTIMIZATION_OPPORTUNITY",
+        "severity": "LOW",
+        "summary": "Potential scaling opportunity",
+        "classification_reason": "Volume and stability gates passed. Marginal efficiency remains untested."
+      },
+      "current": {
+        "start": "2026-11-10",
+        "end": "2026-11-16",
+        "calendar_days": 7,
+        "expected_days": 7,
+        "observed_days": 7,
+        "fictional_days": 7,
+        "missing_dates": [],
+        "complete": true,
+        "metrics": {
+          "impressions": 35567,
+          "clicks": 1490,
+          "spend": "1340.1400",
+          "attributed_purchases": "99.000000",
+          "attributed_purchase_value": "13503.9700",
+          "ctr": "4.189276576601906261422104760030365226193",
+          "cpc": "0.8994228187919463087248322147651006711409",
+          "cpm": "37.67930947226361514887395619534962184047",
+          "purchase_cvr": "6.644295302013422818791946308724832214765",
+          "cpa": "13.53676767676767676767676767676767676768",
+          "roas": "10.07653677973943020878415687913203098184",
+          "attributed_aov": "136.4037373737373737373737373737373737374"
+        }
+      },
+      "baseline": {
+        "start": "2026-11-03",
+        "end": "2026-11-09",
+        "calendar_days": 7,
+        "expected_days": 7,
+        "observed_days": 7,
+        "fictional_days": 7,
+        "missing_dates": [],
+        "complete": true,
+        "metrics": {
+          "impressions": 36350,
+          "clicks": 1516,
+          "spend": "1289.0100",
+          "attributed_purchases": "105.000000",
+          "attributed_purchase_value": "14136.9000",
+          "ctr": "4.170563961485557083906464924346629986245",
+          "cpc": "0.8502704485488126649076517150395778364116",
+          "cpm": "35.46107290233837689133425034387895460798",
+          "purchase_cvr": "6.926121372031662269129287598944591029024",
+          "cpa": "12.27628571428571428571428571428571428571",
+          "roas": "10.96725393906951846766122838457420811320",
+          "attributed_aov": "134.6371428571428571428571428571428571429"
+        }
+      },
+      "targets": {
+        "target_cpa": "26.0000",
+        "target_roas": "4.0000"
+      },
+      "thresholds": {
+        "min_clicks": 100,
+        "min_purchases": "10",
+        "scaling_min_spend": "300",
+        "scaling_roas_above_target_pct": "20",
+        "roas_stability_pct": "15",
+        "cpa_stability_pct": "15",
+        "spend_stability_pct": "25"
+      },
+      "observations": {
+        "roas_target_deviation_pct": "151.9134194934857552196039219783007745459",
+        "roas_change_pct": "-8.121606049049487982337952034958305881073",
+        "cpa_change_pct": "10.26761670278788066857980978119689223560",
+        "spend_change_pct": "3.966610034057144630375249222271355536419",
+        "earlier_context": {
+          "start": "2026-10-06",
+          "end": "2026-11-02",
+          "observed_days": 28,
+          "expected_days": 28
+        }
+      },
+      "cpa_drivers": {},
+      "reporting_definitions": [
+        {
+          "conversion_action": "PURCHASE",
+          "attribution_method": "LAST_CLICK",
+          "attribution_window": "7D_CLICK",
+          "date_basis": "INTERACTION_DATE"
+        }
+      ],
+      "limitations": [
+        "Average historical ROAS and CPA do not establish marginal returns. A controlled test is needed to evaluate additional spend.",
+        "Purchase credit and value are platform-attributed. This evidence cannot establish incremental revenue, profit, or unique customer counts."
+      ],
+      "related_quality_flags": [],
+      "evidence_quality": "SUFFICIENT"
+    }
+  },
+  {
+    "finding_id": 16,
+    "finding_fingerprint": "41c00898eb156f8beb580e13715d50780d3463401c4cfc374ff202df4e2c3f11",
+    "evidence": {
+      "campaign": {
+        "campaign_name": "Alpine Collection Video",
+        "platform": "META_ADS",
+        "objective": "PURCHASES"
+      },
+      "rule": {
+        "policy_id": "D-06",
+        "policy_version": "1.0.0",
+        "category": "DATA_QUALITY",
+        "severity": "MEDIUM",
+        "summary": "Reporting or data-quality issue",
+        "classification_reason": "A blocker affects a baseline or cross-period comparison."
+      },
+      "current": {
+        "start": "2026-11-10",
+        "end": "2026-11-16",
+        "calendar_days": 7,
+        "expected_days": 7,
+        "observed_days": 7,
+        "fictional_days": 7,
+        "missing_dates": [],
+        "complete": true,
+        "metrics": {
+          "impressions": 99226,
+          "clicks": 1214,
+          "spend": "1207.4800",
+          "attributed_purchases": "38.000000",
+          "attributed_purchase_value": "4644.5700",
+          "ctr": "1.223469655130711708624755608409086328180",
+          "cpc": "0.9946293245469522240527182866556836902801",
+          "cpm": "12.16898796686352367323080644185999637192",
+          "purchase_cvr": "3.130148270181219110378912685337726523888",
+          "cpa": "31.77578947368421052631578947368421052632",
+          "roas": "3.846498492728658031603007917315400669162",
+          "attributed_aov": "122.2255263157894736842105263157894736842"
+        }
+      },
+      "baseline": {
+        "start": "2026-11-03",
+        "end": "2026-11-09",
+        "calendar_days": 7,
+        "expected_days": 7,
+        "observed_days": 2,
+        "fictional_days": 2,
+        "missing_dates": [
+          "2026-11-03",
+          "2026-11-04",
+          "2026-11-05",
+          "2026-11-06",
+          "2026-11-07"
+        ],
+        "complete": false,
+        "metrics": {
+          "impressions": 31740,
+          "clicks": 400,
+          "spend": "382.3200",
+          "attributed_purchases": "9.000000",
+          "attributed_purchase_value": "1091.8700",
+          "ctr": "1.260239445494643982356647763074984247007",
+          "cpc": "0.9558",
+          "cpm": "12.04536862003780718336483931947069943289",
+          "purchase_cvr": "2.250000",
+          "cpa": "42.48",
+          "roas": "2.855906047290228081188533165934295877799",
+          "attributed_aov": "121.3188888888888888888888888888888888889"
+        }
+      },
+      "targets": {
+        "target_cpa": "38.0000",
+        "target_roas": "3.2000"
+      },
+      "thresholds": {
+        "maturation_days": 7,
+        "delivery_zero_days": 3,
+        "discontinuity_min_clicks": 100,
+        "discontinuity_min_purchases": "10"
+      },
+      "observations": {
+        "flag_count": 1,
+        "blocking_flag_count": 1
+      },
+      "cpa_drivers": {},
+      "reporting_definitions": [
+        {
+          "conversion_action": "PURCHASE",
+          "attribution_method": "LAST_CLICK",
+          "attribution_window": "7D_CLICK",
+          "date_basis": "INTERACTION_DATE"
+        }
+      ],
+      "limitations": [
+        "Data-quality flags describe the observed integrity signal. A discontinuity alone cannot identify a tracking failure.",
+        "Purchase credit and value are platform-attributed. This evidence cannot establish incremental revenue, profit, or unique customer counts."
+      ],
+      "related_quality_flags": [
+        {
+          "code": "MISSING_REPORTING_DAYS",
+          "period": "baseline",
+          "message": "Expected campaign dates have no persisted daily record.",
+          "dates": [
+            "2026-11-03",
+            "2026-11-04",
+            "2026-11-05",
+            "2026-11-06",
+            "2026-11-07"
+          ],
+          "blocking": true
+        }
+      ],
+      "evidence_quality": "BLOCKED"
+    }
+  }
+]

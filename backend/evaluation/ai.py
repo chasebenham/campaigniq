@@ -71,6 +71,7 @@ def evaluate_cases() -> list[dict]:
             }
         validate_output({
             "finding_id": index,
+            "numeric_claims": [],
             "executive_summary": case["summary"],
             "business_impact_assessment": "The observed metric or reporting issue warrants analyst review.",
             "evidence_references": case["references"],
