@@ -1,6 +1,6 @@
 # CampaignIQ
 
-CampaignIQ is a marketing performance workspace for **Northstar Outfitters**, a fictional direct-to-consumer outdoor apparel brand. Phase 1 covers standardized Google Ads and Meta Ads imports, purchase-acquisition metrics, and reporting. The fictional business has a $120,000 monthly marketing budget and reports in USD.
+CampaignIQ is a marketing performance workspace for **Northstar Outfitters**, a fictional direct-to-consumer outdoor apparel brand. It supports standardized Google Ads and Meta Ads imports, purchase-acquisition metrics, deterministic Insights, and an optional AI Analyst. The fictional business has a $120,000 monthly marketing budget and reports in USD.
 
 The sample portfolio has 16 campaigns and 1,431 observed campaign-days from August 25 through November 22, 2026. The seed and sample CSVs are fictional. Reports identify the presence of seed records, and the product distinguishes platform-attributed purchase credit from customer counts.
 
@@ -9,7 +9,7 @@ The sample portfolio has 16 campaigns and 1,431 observed campaign-days from Augu
 Use Docker Desktop with the Linux container engine running, Python 3.12 or later, and Node.js 22.12 or later. Run the setup from the repository root in PowerShell.
 
 ```powershell
-Copy-Item .env.example .env
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 docker compose up -d --wait postgres
 py -3 -m venv .venv
 & ./.venv/Scripts/python.exe -m pip install -r backend/requirements-dev.txt
@@ -22,7 +22,7 @@ npm.cmd ci
 Pop-Location
 ```
 
-If your Python installation exposes `python` on PATH, `python -m venv .venv` is equivalent. The local database binds to `127.0.0.1:5433`. Keep the password and database URL in `.env` in sync if you change them. The example credentials are for loopback development. This phase uses no external AI service.
+If your Python installation exposes `python` on PATH, `python -m venv .venv` is equivalent. The local database binds to `127.0.0.1:5433`. Keep the password and database URL in `.env` in sync if you change them. The example credentials are for loopback development. To upgrade a Phase 1 installation, reinstall backend requirements and apply the new migrations. Seeding is safe to rerun.
 
 Start the API in a PowerShell window at the repository root.
 
@@ -48,6 +48,10 @@ Open [CampaignIQ](http://localhost:5173) or [API documentation](http://127.0.0.1
 
 The [CSV contract](docs/csv-import.md) specifies the accepted headers, reporting contexts, and duplicate rules. The [fixtures](backend/data/fixtures) include a valid and an invalid fictional example.
 
+## Run detection and request analysis
+
+Open **Insights** and select **Run Performance Analysis**. Review the mature reporting window, finding evidence, and per-run suppressions. Detection works with AI disabled. To request a model interpretation of a current finding, enable the server configuration, then use **Analyze with AI** in the AI Analyst workspace. [Detection methodology](docs/detection-methodology.md) · [AI setup](docs/ai-analyst.md)
+
 ## Run tests and build
 
 Set the test database URL to the loopback PostgreSQL service or another disposable test server where the role can create schemas. The integration tests create and drop unique schemas.
@@ -72,4 +76,7 @@ Omit `CAMPAIGNIQ_TEST_DATABASE_URL` for the fast SQLite and pure-Python tests. T
 - [Metric definitions and attribution](docs/metrics-methodology.md)
 - [CSV import contract](docs/csv-import.md)
 - [Synthetic dataset](docs/synthetic-dataset.md)
+- [Detection policies](docs/detection-policies.md)
+- [Fictional detection evaluation](docs/detection-evaluation.md)
+- [AI Analyst evaluation](docs/ai-evaluation.md)
 - [Phase roadmap](docs/phase-roadmap.md)

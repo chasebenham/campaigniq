@@ -114,7 +114,7 @@ export class ApiError extends Error {
 
 type Params = Record<string, string | number | undefined>
 
-async function request<T>(path: string, params?: Params, init?: RequestInit): Promise<T> {
+export async function request<T>(path: string, params?: Params, init?: RequestInit): Promise<T> {
   const query = new URLSearchParams()
   Object.entries(params ?? {}).forEach(([name, value]) => {
     if (value !== undefined && value !== "") query.set(name, String(value))

@@ -7,15 +7,17 @@ import { Link, NavLink, Outlet, Route, Routes } from "react-router"
 import { Overview } from "./pages/overview"
 import { CampaignDetail, Campaigns } from "./pages/campaigns"
 import { Imports } from "./pages/imports"
+import { InsightDetail, Insights } from "./pages/insights"
+import { AiAnalyst } from "./pages/ai-analyst"
 
 const navigation = [
   { to: "/", label: "Overview", icon: LayoutDashboard },
   { to: "/campaigns", label: "Campaigns", icon: Megaphone },
+  { to: "/insights", label: "Insights", icon: Lightbulb },
+  { to: "/ai-analyst", label: "AI Analyst", icon: Sparkles },
   { to: "/imports", label: "Data Imports", icon: Database },
 ]
 const upcoming = [
-  { label: "Insights", icon: Lightbulb },
-  { label: "AI Analyst", icon: Sparkles },
   { label: "Budget Lab", icon: FlaskConical },
   { label: "Strategy Briefs", icon: NotebookPen },
 ]
@@ -72,6 +74,10 @@ export function App() {
         <Route path="campaigns" element={<Campaigns />} />
         <Route path="campaigns/:campaignId" element={<CampaignDetail />} />
         <Route path="imports" element={<Imports />} />
+        <Route path="insights" element={<Insights />} />
+        <Route path="insights/:findingId" element={<InsightDetail />} />
+        <Route path="ai-analyst" element={<AiAnalyst />} />
+        <Route path="ai-analyst/:findingId" element={<AiAnalyst />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

@@ -19,3 +19,11 @@ The CSV service requires one attribution method per campaign and the shared purc
 `import_validation_errors` stores the original one-based CSV line number, optional field name, error code, and user-facing message. Several issues may point to a single rejected row. Its indexed import/line ordering supports pagination. Performance foreign keys restrict deletion of referenced campaign and import records.
 
 Alembic revision `20261123_0001` creates the four tables, constraints, and indexes. PostgreSQL tests verify both migration directions in isolated schemas.
+
+## Detection and AI audit
+
+Revision `20261123_0002` adds detection runs, findings and suppressions. Runs store the selected windows, policy configuration, logical fingerprint and performance data version. Each run records at most one finding or suppression for a given campaign and policy. Findings retain the measured periods, campaign metadata, thresholds, quality flags and classification as immutable audit evidence. The underlying campaign and import tables retain their Phase 1 schema.
+
+Revision `20261123_0003` adds `ai_analyses`. A row references an existing finding and contains the evidence fingerprint, canonical snapshot, version metadata, status and outcome. A partial unique index prevents concurrent pending or completed attempts for the same finding, evidence, model and versions. Failed and stale records remain available for history.
+
+Revision `20261123_0004` preserves multiple completed versions after explicit regeneration. Pending attempts remain unique for the same analysis identity, and a request UUID is unique per finding. Downgrading to the earlier uniqueness rule stops if that would conflict with saved versions.

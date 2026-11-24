@@ -4,12 +4,10 @@
 
 Phase 1 covers the PostgreSQL reporting model, deterministic fictional seed, CSV validation and audit trail, Decimal KPI calculations, and three reporting and import workspaces.
 
-## Phase 2 · Performance and data-quality detection
+## Phase 2 · Performance detection and AI Analyst
 
-1. Specify the detection unit, lookback and comparison windows, denominator requirements, and measurement-context rules before tuning detectors.
-2. Build deterministic baselines for changes in CPA, ROAS, CVR and spend. Use weekday-matched comparisons and guard against low volume and incomplete coverage.
-3. Evaluate detections against the held-out scenario manifest by campaign and time window. Measure precision, recall, false positives on stable campaigns, and time to first valid detection.
-4. Store detection evidence, thresholds, affected periods, and raw numerators and denominators so analysts can reproduce each finding.
-5. Surface results in the Insights workspace with attribution caveats and the related campaign view.
+Insights evaluates six deterministic policies with mature, comparable campaign reporting and persists findings and suppressions. The AI Analyst provides a request-driven interpretation with validated references and a proposed manual action. [Detection policies](detection-policies.md) · [AI Analyst](ai-analyst.md)
 
-AI-assisted analysis, budget modeling, and executive reports are later phases.
+Evaluation includes fictional scenario matching and an offline AI contract. Human-adjudicated real-world detection data and live model review are future validation work. [Detection evaluation](detection-evaluation.md) · [AI evaluation](ai-evaluation.md)
+
+Budget modeling and executive reports are later phases.

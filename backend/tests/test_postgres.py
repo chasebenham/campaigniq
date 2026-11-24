@@ -1,42 +1,16 @@
-import os
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
-from uuid import uuid4
 
 import pytest
 from alembic import command
-from alembic.config import Config
-from sqlalchemy import create_engine, func, inspect, select, text
+from sqlalchemy import func, inspect, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models import Campaign, DailyCampaignPerformance, DataImport
 from app.seed import seed
+from evaluation.detection import evaluate_seed
 
 pytestmark = pytest.mark.postgres
-
-
-@pytest.fixture
-def postgres():
-    url = os.getenv("CAMPAIGNIQ_TEST_DATABASE_URL")
-    if not url:
-        pytest.skip("Set CAMPAIGNIQ_TEST_DATABASE_URL to run isolated PostgreSQL integration tests.")
-    schema = f"ciq_test_{uuid4().hex}"
-    admin = create_engine(url)
-    with admin.begin() as connection:
-        connection.execute(text(f'CREATE SCHEMA "{schema}"'))
-    engine = create_engine(url, connect_args={"options": f"-c search_path={schema}"})
-    config = Config(Path(__file__).resolve().parents[1] / "alembic.ini")
-    try:
-        with engine.begin() as connection:
-            config.attributes["connection"] = connection
-            command.upgrade(config, "head")
-        yield engine, config
-    finally:
-        engine.dispose()
-        with admin.begin() as connection:
-            connection.execute(text(f'DROP SCHEMA "{schema}" CASCADE'))
-        admin.dispose()
 
 
 def test_migrations_are_reversible_and_match_models(postgres):
@@ -46,9 +20,10 @@ def test_migrations_are_reversible_and_match_models(postgres):
         command.check(config)
     with engine.begin() as connection:
         config.attributes["connection"] = connection
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "20261123_0001"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "20261123_0004"
         assert set(inspect(connection).get_table_names()) >= {
             "campaigns", "daily_campaign_performance", "data_imports", "import_validation_errors",
+            "detection_runs", "detection_findings", "detection_suppressions", "ai_analyses",
         }
         command.downgrade(config, "base")
         assert "campaigns" not in inspect(connection).get_table_names()
@@ -107,3 +82,59 @@ def test_concurrent_commits_revalidate_under_the_postgres_write_lock(postgres, c
             assert sorted(future.result().status_code for future in futures) == [201, 409]
         assert client.get("/api/v1/imports").json()["total"] == 1
         assert client.get("/api/v1/analytics/overview").json()["record_count"] == 1
+
+
+def test_detection_persistence_pagination_and_stale_history(postgres, client_for, csv_file, submit):
+    engine, _ = postgres
+    with Session(engine) as db, db.begin():
+        assert seed(db) == (16, 1431)
+    with client_for(engine) as client:
+        params = {"evaluation_date": "2026-11-23"}
+        response = client.post("/api/v1/detection/runs", json=params)
+        assert response.status_code == 201, response.text
+        run = response.json()
+        assert run["campaign_count"] == 16 and run["finding_count"] > 1 and run["suppression_count"] > 0
+        assert run["windows"]["current"]["end"] == "2026-11-15"
+        repeated = client.post("/api/v1/detection/runs", json=params)
+        assert repeated.status_code == 200 and repeated.json()["reused"]
+        assert repeated.json()["id"] == run["id"]
+        page = client.get("/api/v1/insights?platform=GOOGLE_ADS&category=PERFORMANCE_RISK&page_size=1").json()
+        assert page["total"] >= 2 and len(page["items"]) == 1
+        finding = page["items"][0]
+        next_page = client.get("/api/v1/insights?platform=GOOGLE_ADS&category=PERFORMANCE_RISK&page_size=1&page=2").json()
+        assert next_page["items"][0]["id"] != finding["id"]
+        assert finding["campaign_snapshot"]["platform"] == "GOOGLE_ADS"
+        assert finding["severity"] == "HIGH"
+        assert finding["current_evidence"]["fictional_days"] == 7
+        campaign = client.get(f"/api/v1/campaigns/{finding['campaign_id']}/insights?policy_id={finding['policy_id']}").json()
+        assert campaign["items"][0]["id"] == finding["id"]
+        assert client.get("/api/v1/insights?start_date=2026-11-24").json()["total"] == 0
+        assert client.get("/api/v1/insights?severity=INVALID").status_code == 422
+        suppressions = client.get(f"/api/v1/detection/runs/{run['id']}/suppressions?policy_id=D-03").json()
+        assert suppressions["total"] > 0
+        assert submit(client, csv_file()).status_code == 201
+        assert client.get("/api/v1/insights/summary").json()["run"]["state"] == "STALE"
+        assert client.get(f"/api/v1/insights/{finding['id']}").json()["state"] == "STALE"
+        refreshed = client.post("/api/v1/detection/runs", json=params).json()
+        assert refreshed["id"] != run["id"] and refreshed["state"] == "CURRENT"
+        old = client.get(f"/api/v1/insights/{finding['id']}").json()
+        assert old["state"] == "HISTORICAL" and old["fingerprint"] == finding["fingerprint"]
+        older = client.post("/api/v1/detection/runs", json={"evaluation_date": "2026-11-09"}).json()
+        assert older["state"] == "HISTORICAL"
+        assert client.get("/api/v1/detection/runs").json()["total"] == 3
+        assert client.get("/api/v1/detection/runs?end_date=2026-11-12&status=COMPLETED").json()["items"][0]["id"] == older["id"]
+        assert client.get("/api/v1/analytics/overview").json()["record_count"] == 1432
+
+
+def test_seed_scenario_evaluation_reports_candidates_and_suppressions(postgres):
+    engine, _ = postgres
+    with Session(engine) as db, db.begin():
+        seed(db)
+        report = evaluate_seed(db)
+    assert report["fictional"]
+    assert report["reporting_cutoffs"][0] == "2026-09-07"
+    assert report["reporting_cutoffs"][-1] == "2026-11-22"
+    assert report["by_policy"]["D-06"]["true_positives"] == 2
+    assert report["by_policy"]["D-04"]["recall"] is None
+    assert any(row["scenario"] == "low_volume" and row["reason"] == "INSUFFICIENT_VOLUME"
+               for row in report["cohort_suppressions"])

@@ -1,15 +1,43 @@
 import csv
 import io
+import os
+from pathlib import Path
+from uuid import uuid4
 
 import pytest
+from alembic import command
+from alembic.config import Config
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
 from app.db import Base, get_db
 from app.main import app
 from app.validation import CSV_COLUMNS
+
+
+@pytest.fixture
+def postgres():
+    url = os.getenv("CAMPAIGNIQ_TEST_DATABASE_URL")
+    if not url:
+        pytest.skip("Set CAMPAIGNIQ_TEST_DATABASE_URL to run isolated PostgreSQL integration tests.")
+    schema = f"ciq_test_{uuid4().hex}"
+    admin = create_engine(url)
+    with admin.begin() as connection:
+        connection.execute(text(f'CREATE SCHEMA "{schema}"'))
+    engine = create_engine(url, connect_args={"options": f"-c search_path={schema}"})
+    config = Config(Path(__file__).resolve().parents[1] / "alembic.ini")
+    try:
+        with engine.begin() as connection:
+            config.attributes["connection"] = connection
+            command.upgrade(config, "head")
+        yield engine, config
+    finally:
+        engine.dispose()
+        with admin.begin() as connection:
+            connection.execute(text(f'DROP SCHEMA "{schema}" CASCADE'))
+        admin.dispose()
 
 
 @pytest.fixture

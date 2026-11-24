@@ -1,0 +1,68 @@
+[
+  {
+    "case": "cpa_deterioration", "policy": "D-01",
+    "baseline": {"spend": "400", "purchases": "20", "value": "1200"},
+    "current": {"spend": "600", "purchases": "20", "value": "1200"},
+    "references": ["current.metrics.cpa", "baseline.metrics.cpa", "observations.cpa_change_pct", "current.metrics.cpc", "baseline.metrics.cpc", "current.metrics.purchase_cvr", "baseline.metrics.purchase_cvr"],
+    "expected_values": {"current.metrics.cpa": "30", "baseline.metrics.cpa": "20", "observations.cpa_change_pct": "50"},
+    "action": "INVESTIGATE",
+    "summary": "Observed acquisition cost increased while purchase credit held steady.",
+    "next_step": "Break down click costs and purchase efficiency by device and audience."
+  },
+  {
+    "case": "below_target_roas", "policy": "D-02",
+    "baseline": {"spend": "500", "purchases": "20", "value": "1200"},
+    "current": {"spend": "500", "purchases": "20", "value": "700"},
+    "references": ["current.metrics.roas", "targets.target_roas", "current.metrics.attributed_purchase_value"],
+    "expected_values": {"current.metrics.roas": "1.4", "targets.target_roas": "2", "current.metrics.attributed_purchase_value": "700"},
+    "action": "INVESTIGATE",
+    "summary": "Attributed return fell below the configured campaign target.",
+    "next_step": "Inspect attributed order values and campaign product mix to identify what changed."
+  },
+  {
+    "case": "purchase_cvr_decline", "policy": "D-03",
+    "baseline": {"spend": "500", "purchases": "30", "value": "1200"},
+    "current": {"spend": "500", "purchases": "18", "value": "900"},
+    "references": ["current.metrics.purchase_cvr", "baseline.metrics.purchase_cvr", "observations.ctr_change_pct"],
+    "expected_values": {"current.metrics.purchase_cvr": "1.8", "baseline.metrics.purchase_cvr": "3", "observations.ctr_change_pct": "0"},
+    "action": "TEST",
+    "summary": "Observed purchase efficiency declined while click-through rate was stable.",
+    "next_step": "Check conversion measurement and test one change to the purchase flow once tracking is verified."
+  },
+  {
+    "case": "spend_with_zero_purchase_credit", "policy": "D-04",
+    "baseline": {"spend": "500", "purchases": "20", "value": "1200"},
+    "current": {"spend": "500", "purchases": "0", "value": "0"},
+    "references": ["current.metrics.spend", "current.metrics.attributed_purchases", "observations.reported_zero_purchases"],
+    "expected_values": {"current.metrics.spend": "500", "current.metrics.attributed_purchases": "0", "observations.reported_zero_purchases": true},
+    "action": "INVESTIGATE",
+    "summary": "Spend continued during a complete period with zero reported purchase credit.",
+    "next_step": "Reconcile purchase events with commerce records before making a spend decision."
+  },
+  {
+    "case": "potential_scaling", "policy": "D-05", "target_roas": "2.5",
+    "baseline": {"spend": "500", "purchases": "20", "value": "1500"},
+    "current": {"spend": "500", "purchases": "20", "value": "1600"},
+    "references": ["current.metrics.roas", "targets.target_roas", "observations.spend_change_pct"],
+    "expected_values": {"current.metrics.roas": "3.2", "targets.target_roas": "2.5", "observations.spend_change_pct": "0"},
+    "action": "CONSIDER_REALLOCATION",
+    "summary": "Above-target attributed return and stable recent delivery support considering a controlled test.",
+    "next_step": "Plan a small spend test and measure marginal performance before reallocating more budget."
+  },
+  {
+    "case": "reporting_gap", "policy": "D-06",
+    "baseline": {"spend": "500", "purchases": "20", "value": "1200"},
+    "current": {"spend": "500", "purchases": "20", "value": "1200", "missing_days": 2},
+    "references": ["current.observed_days", "related_quality_flags.0.code"],
+    "expected_values": {"current.observed_days": 5, "related_quality_flags.0.code": "MISSING_REPORTING_DAYS"},
+    "action": "INVESTIGATE",
+    "summary": "Missing reporting days block a reliable current-period performance conclusion.",
+    "next_step": "Reconcile the missing partitions with the platform and rerun detection after backfilling them."
+  },
+  {
+    "case": "insufficient_evidence", "policy": "D-01",
+    "baseline": {"spend": "50", "purchases": "2", "value": "100", "clicks": 25},
+    "current": {"spend": "100", "purchases": "2", "value": "100", "clicks": 25},
+    "expected_suppression": "INSUFFICIENT_VOLUME"
+  }
+]

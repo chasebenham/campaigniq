@@ -12,8 +12,10 @@ from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app import analytics
+from app.ai_api import router as ai_router
 from app.config import Settings
 from app.db import get_db
+from app.detection_api import router as detection_router
 from app.imports import Preview, StalePreview, assess, commit_import
 from app.models import Campaign, DataImport, ImportValidationError
 from app.schemas import (
@@ -38,10 +40,11 @@ EntityID = Annotated[int, Path(gt=0)]
 CSVFile = Annotated[UploadFile, File(description="UTF-8 canonical CampaignIQ CSV")]
 
 
-def error_response(status: int, code: str, message: str, details=None):
+def error_response(status: int, code: str, message: str, details=None, headers=None):
     return JSONResponse(
         status_code=status,
         content={"error": {"code": code, "message": message, "details": details}},
+        headers=headers,
     )
 
 
@@ -52,6 +55,7 @@ async def handle_http_error(request, error):
         error.status_code,
         detail.get("code", "HTTP_ERROR") if isinstance(detail, dict) else "HTTP_ERROR",
         detail.get("message", "The request could not be completed.") if isinstance(detail, dict) else str(detail),
+        headers=error.headers,
     )
 
 
@@ -193,4 +197,6 @@ def get_import(import_id: EntityID, db: DB, pagination: Pagination) -> ImportDet
     )
 
 
+api.include_router(detection_router)
+api.include_router(ai_router)
 app.include_router(api)

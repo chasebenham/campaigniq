@@ -71,7 +71,10 @@ export function CampaignDetail() {
   if (filters.end_date) listParams.set("end_date", filters.end_date)
 
   return <>
-    <Link to={`/campaigns${listParams.size ? `?${listParams}` : ""}`} className="text-link parent-link">Campaigns</Link>
+    <div className="finding-meta parent-links">
+      <Link to={`/campaigns${listParams.size ? `?${listParams}` : ""}`} className="text-link parent-link">Campaigns</Link>
+      {campaign && <Link className="text-link" to={`/insights?campaign_id=${campaign.id}`}>Campaign insights</Link>}
+    </div>
     <PageHeading title={campaign?.campaign_name ?? "Campaign detail"} description="Daily performance, campaign targets, and reporting definitions.">
       {campaign && <div className="heading-badges">
         <PlatformBadge platform={campaign.platform} /><StatusBadge status={campaign.status} />

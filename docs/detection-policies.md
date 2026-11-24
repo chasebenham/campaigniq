@@ -1,0 +1,18 @@
+# Detection policies
+
+Policy version `1.0.0` uses fictional Northstar Outfitters operating thresholds. They are configurable business rules. Statistical significance requires a separate test.
+
+| Policy | Inclusive trigger | Required evidence | Classification |
+| --- | --- | --- | --- |
+| D-01 CPA deterioration | Current CPA at least 20% above baseline | Two complete, comparable weeks. Each has at least 100 clicks and 10 attributed purchases. Baseline CPA is positive. | Performance risk. High if current spend is at least $500 or CPA rose by at least 35%. Medium otherwise. |
+| D-02 ROAS below target | Current ROAS at least 15% below its configured target | Complete current week with at least 100 clicks, 10 attributed purchases, positive spend, and an explicit positive target. | Performance risk. High if current spend is at least $500 or the shortfall is at least 35%. Medium otherwise. |
+| D-03 Purchase conversion rate decline | Purchase CVR down at least 15% and CTR within a ±10% relative band | Two complete, comparable weeks with at least 100 clicks and 10 attributed purchases each, and positive baseline CVR and CTR. | Medium performance risk. A traffic-to-purchase efficiency decline motivates investigation of possible causes. |
+| D-04 Spend without attributed purchases | At least $300 of current spend and exactly zero reported purchase credit | Complete current week with valid credit and spend. Zero reported purchases are eligible. | Medium performance risk. High starting at $1,000 of current spend. |
+| D-05 Potential scaling opportunity | Current ROAS at least 20% above target. Week-over-week ROAS and CPA each within ±15%, and spend within ±25%. | Two complete, comparable weeks with at least $300 spend, 100 clicks, and 10 attributed purchases each. Explicit positive target and usable comparison baselines. | Low-priority optimization opportunity. A controlled spend test can estimate marginal performance. |
+| D-06 Reporting or data-quality issue | One or more integrity signals | Missing expected dates, out-of-lifetime or duplicate days, unknown or unsupported attribution, mixed definitions, invalid KPI inputs, or inconsistent conversion values. A discontinuity may also merit review. | High for a blocking current-period issue. Medium for a baseline or comparison blocker. Low for an advisory signal in the evaluated weeks. Informational when advisory flags apply only to older context. |
+
+D-06 treats absent dates, absent or non-finite values, unknown reporting definitions, and true zeros as distinct signals. Positive attributed value with zero purchase credit blocks conversion-based findings. Zero purchase value with positive credit prompts review. Three trailing days with zero impressions after at least 100 baseline clicks, or zero current purchase credit with at least 100 current clicks and 10 baseline purchases, are advisory discontinuities. These are observations that can also reflect ordinary delivery or sales conditions.
+
+Individual campaign evaluations use platform-attributed credit. Purchase CVR changes are relative percentages. For instance, a move from 5% to 4.25% is a 15% decline. The persisted evidence includes the inputs, comparison dates, exact thresholds, and the reason for severity. Default priority orders by severity, current spend exposure, absolute deviation or blocker count, and finding ID. Opportunities retain their own category.
+
+Configuration uses the `DETECTION_` prefix plus the field name in uppercase. See [detection_config.py](../backend/app/detection_config.py) for bounds and defaults. Editing a threshold creates a new run identity because the configuration is included in the input fingerprint.

@@ -43,6 +43,8 @@ export function Imports() {
         queryClient.invalidateQueries({ queryKey: ["imports"] }),
         queryClient.invalidateQueries({ queryKey: ["performance"] }),
         queryClient.invalidateQueries({ queryKey: ["campaign-options"] }),
+        queryClient.invalidateQueries({ queryKey: ["detection"] }),
+        queryClient.invalidateQueries({ queryKey: ["ai", "history"] }),
       ])
     },
   })
