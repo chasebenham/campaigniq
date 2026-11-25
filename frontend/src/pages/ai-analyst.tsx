@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { actionLabels, ai, unavailableMessages, type Analysis } from "@/lib/ai"
+import { budgetFindingLink } from "@/lib/budget"
 import type { Decimal, MetricKey, Page } from "@/lib/api"
 import { detection } from "@/lib/detection"
 import { dateRange, formatMetric, metricNames } from "@/lib/presentation"
@@ -48,6 +49,7 @@ export function AiAnalyst() {
     },
   })
   const current = finding.data
+  const budgetLink = current && budgetFindingLink(current)
   const fromThisFinding = run.variables?.id === id
   const latestHistory = historyPage === 1 ? history.data : cache.getQueryData<Page<Analysis>>(["ai", "history", id, 1])
   const pending = (fromThisFinding && run.isPending) || (latestHistory?.items.some((item) => item.status === "PENDING") ?? false)
@@ -112,6 +114,7 @@ export function AiAnalyst() {
             <span>{dateRange(current.current_evidence.start, current.current_evidence.end)}</span>
             {current.current_evidence.fictional_days > 0 && <span>{current.current_evidence.fictional_days === current.current_evidence.observed_days ? "Fictional seed evidence" : "Includes fictional data"}</span>}
             <Link className="text-link" to={`/insights/${current.id}`}>Open finding in Insights</Link>
+            {budgetLink && <Link className="text-link" to={budgetLink}>Model a budget scenario</Link>}
           </div>
           <div className="analyst-controls">
             <Button disabled={!canAnalyze || Boolean(completed)} onClick={() => run.mutate({ id })}>
@@ -143,6 +146,8 @@ export function AiAnalyst() {
               </SelectField></div>
               <Pagination data={history.data} onChange={(page) => { setHistoryPage(page); setSelectedAnalysis(null) }} label="Analysis history pages" />
             </Card>
+            {selected?.status === "COMPLETED" && <Link className="text-link"
+              to={`/strategy-briefs/new?finding_id=${current.id}&analysis_id=${selected.id}`}>Add Analysis to Brief</Link>}
             {selected && <AnalysisResult analysis={selected} />}
           </>}
       </>}

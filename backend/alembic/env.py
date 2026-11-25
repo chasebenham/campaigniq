@@ -1,7 +1,7 @@
 from alembic import context
 from sqlalchemy import create_engine, pool
 
-from app import ai_models, detection_models, models
+from app import ai_models, brief_models, budget_models, detection_models, models
 from app.config import Settings
 
 config = context.config

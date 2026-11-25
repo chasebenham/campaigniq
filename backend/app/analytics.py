@@ -35,7 +35,7 @@ def campaign_conditions(filters: Filters):
     return conditions
 
 
-def performance_buckets(session: Session, filters: Filters) -> list[PerformanceBucket]:
+def performance_buckets(session: Session, filters: Filters, *, campaign_ids: list[int] | None = None) -> list[PerformanceBucket]:
     p = DailyCampaignPerformance
     context_columns = [getattr(p, field) for field in CONTEXT_FIELDS]
     metric_columns = [getattr(p, field) for field in Totals.__dataclass_fields__]
@@ -56,6 +56,8 @@ def performance_buckets(session: Session, filters: Filters) -> list[PerformanceB
     )
     if filters.start_date:
         query = query.where(p.report_date >= filters.start_date)
+    if campaign_ids is not None:
+        query = query.where(p.campaign_id.in_(campaign_ids))
     if filters.end_date:
         query = query.where(p.report_date <= filters.end_date)
     if isinstance(filters, CampaignFilters) and filters.status:

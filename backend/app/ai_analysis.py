@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import func, select, update
+from sqlalchemy import func, select, union_all, update
 from sqlalchemy.orm import Session
 
 from app.ai_config import AISettings
@@ -9,6 +9,7 @@ from app.ai_contract import AnalysisOutput, MAX_EVIDENCE_BYTES, PROMPT_VERSION, 
 from app.ai_diagnostics import diagnostic_artifact
 from app.ai_models import AIAnalysis
 from app.ai_provider import ProviderFailure
+from app.brief_models import BriefSummaryAttempt
 from app.db import lock_performance_writes
 from app.detection import active_run, canonical_json, finding_state, fingerprint, source_version
 from app.detection_models import DetectionFinding, DetectionRun
@@ -90,13 +91,7 @@ def reserve(db: Session, finding_id: int, settings: AISettings, *, regenerate_fr
         if completed and completed.id != original.id:
             return completed, None
 
-    count, oldest = db.execute(select(func.count(ai.id), func.min(ai.created_at)).where(
-        ai.created_at > now - RATE_WINDOW,
-    )).one()
-    if count >= settings.ai_request_limit_per_hour:
-        retry = max(1, int((ensure_utc(oldest) + RATE_WINDOW - now).total_seconds()) + 1)
-        raise AnalysisRejection(429, "AI_RATE_LIMIT", "The workspace has reached its hourly AI request limit. Try again later.",
-                                {"Retry-After": str(retry)})
+    check_rate_limit(db, settings, now)
 
     record = AIAnalysis(
         finding_id=finding.id, evidence_fingerprint=digest, evidence_snapshot=snapshot,
@@ -140,6 +135,16 @@ def finish(db: Session, reservation: Reservation, output: AnalysisOutput | None,
             record.error_message = "The reporting evidence changed while this analysis was running."
     db.flush()
     return record
+
+
+def check_rate_limit(db: Session, settings: AISettings, now: datetime) -> None:
+    recent = union_all(*(select(model.created_at).where(model.created_at > now - RATE_WINDOW)
+                         for model in (AIAnalysis, BriefSummaryAttempt))).subquery()
+    count, oldest = db.execute(select(func.count(), func.min(recent.c.created_at))).one()
+    if count >= settings.ai_request_limit_per_hour:
+        retry = max(1, int((ensure_utc(oldest) + RATE_WINDOW - now).total_seconds()) + 1)
+        raise AnalysisRejection(429, "AI_RATE_LIMIT", "The workspace has reached its hourly AI request limit. Try again later.",
+                                {"Retry-After": str(retry)})
 
 
 def ensure_utc(value: datetime) -> datetime:

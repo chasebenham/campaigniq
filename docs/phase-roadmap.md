@@ -10,4 +10,10 @@ Insights evaluates six deterministic policies with mature, comparable campaign r
 
 Evaluation includes fictional scenario matching and an offline AI contract. Human-adjudicated real-world detection data and live model review are future validation work. [Detection evaluation](detection-evaluation.md) · [AI evaluation](ai-evaluation.md)
 
-Budget modeling and executive reports are later phases.
+## Phase 3A · Budget Lab
+
+Budget Lab compares human-directed allocations using mature campaign history, editable assumptions, and explicit extrapolation warnings. Saved snapshots preserve calculations and can be cloned and compared. [Budget Lab](budget-lab.md) · [Modeling methodology](budget-methodology.md)
+
+## Phase 3B · Strategy Briefs
+
+Strategy Briefs combine verified performance, selected findings, accepted AI interpretations, and optional Budget Lab snapshots into a versioned executive report. The workspace supports commentary edits, optional AI executive synthesis, and export of a specific saved version. [Strategy Briefs](strategy-briefs.md)

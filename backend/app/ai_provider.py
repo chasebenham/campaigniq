@@ -33,6 +33,13 @@ class ProviderResult:
 
 
 @dataclass(frozen=True)
+class StructuredResponse:
+    text: str
+    usage: dict | None
+    status: str
+
+
+@dataclass(frozen=True)
 class ProviderCheck:
     ok: bool
     code: str | None = None
@@ -89,8 +96,18 @@ class OpenAIProvider:
         return self._remember(settings, ProviderCheck(True))
 
     def generate(self, settings: AISettings, snapshot: dict) -> ProviderResult:
-        payload = provider_payload(snapshot)
-        schema = provider_schema(snapshot)
+        result = self.structured(settings, payload=provider_payload(snapshot), schema=provider_schema(snapshot),
+                                 instructions=SYSTEM_INSTRUCTIONS, name="CampaignAnalysis",
+                                 max_output_tokens=MAX_OUTPUT_TOKENS)
+        try:
+            output = parse_output(result.text)
+        except OutputRejection as error:
+            raise ProviderFailure("AI_INVALID_OUTPUT", "The AI response did not match the required structure.", 502,
+                                  result.usage, diagnostic=error.diagnostic, provider_status=result.status) from None
+        return ProviderResult(output, result.usage, result.status)
+
+    def structured(self, settings: AISettings, *, payload: dict, schema: dict, instructions: str,
+                   name: str, max_output_tokens: int) -> StructuredResponse:
         model = settings.selected_model
         options = {"reasoning": {"effort": "low"}} if model == "gpt-6-luna" or model.startswith("gpt-6-luna-") else {}
         with self._client(settings, REQUEST_TIMEOUT) as client:
@@ -98,11 +115,11 @@ class OpenAIProvider:
                 try:
                     response = client.responses.create(
                         model=model,
-                        instructions=SYSTEM_INSTRUCTIONS,
+                        instructions=instructions,
                         input=[{"role": "user", "content": canonical_json(payload)}],
-                        text={"format": {"type": "json_schema", "name": "CampaignAnalysis", "strict": True,
+                        text={"format": {"type": "json_schema", "name": name, "strict": True,
                                          "schema": schema}},
-                        max_output_tokens=MAX_OUTPUT_TOKENS,
+                        max_output_tokens=max_output_tokens,
                         store=False,
                         **options,
                     )
@@ -126,12 +143,7 @@ class OpenAIProvider:
                     })
                     raise ProviderFailure("AI_INVALID_OUTPUT", "OpenAI did not return a complete analysis.", 502, usage,
                                           diagnostic=diagnostic, provider_status=response.status)
-                try:
-                    output = parse_output(response.output_text)
-                except OutputRejection as error:
-                    raise ProviderFailure("AI_INVALID_OUTPUT", "The AI response did not match the required structure.", 502, usage,
-                                          diagnostic=error.diagnostic, provider_status=response.status) from None
-                return ProviderResult(output, usage, response.status)
+                return StructuredResponse(response.output_text, usage, response.status)
         raise AssertionError("The bounded provider loop did not resolve.")
 
 

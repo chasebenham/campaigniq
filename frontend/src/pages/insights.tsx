@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { getCampaignOptions } from "@/lib/api"
+import { budgetFindingLink } from "@/lib/budget"
 import { categories, detection, policies, severities, states, type DetectionRun, type Finding } from "@/lib/detection"
 import { dateLabel, dateRange } from "@/lib/presentation"
 
@@ -177,10 +178,15 @@ export function FindingsTable({ findings }: { findings: Finding[] }) {
 export function InsightDetail() {
   const id = useParams().findingId ?? ""
   const result = useQuery({ queryKey: ["detection", "finding", id], queryFn: ({ signal }) => detection.finding(id, signal) })
+  const budgetLink = result.data && budgetFindingLink(result.data)
   return <>
     <Link to="/insights" className="text-link parent-link">Insights</Link>
     <PageHeading title={result.data?.summary ?? "Finding detail"} description={result.data ? `Detection run #${result.data.run_id}` : "Review the reporting evidence behind this finding."}>
-      {result.data && <Link className="text-link" to={`/ai-analyst/${result.data.id}`}>Review in AI Analyst</Link>}
+      {result.data && <div className="budget-run-controls">
+        <Link className="text-link" to={`/ai-analyst/${result.data.id}`}>Review in AI Analyst</Link>
+        <Link className="text-link" to={`/strategy-briefs/new?finding_id=${result.data.id}`}>Include in Strategy Brief</Link>
+        {budgetLink && <Link className="text-link" to={budgetLink}>Model a budget scenario</Link>}
+      </div>}
     </PageHeading>
     {result.isPending ? <Loading label="Loading finding evidence…" /> :
       result.isError ? <ErrorPanel error={result.error} retry={() => void result.refetch()} /> :

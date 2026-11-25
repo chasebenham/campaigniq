@@ -22,6 +22,15 @@ export function ErrorPanel({ error, retry }: { error: Error; retry?: () => void 
   </Card>
 }
 
+export function ActionRequirements({ id, heading, items }: { id: string; heading: string; items: string[] }) {
+  return <div id={id} className="action-requirements" aria-live="polite" aria-atomic="true">
+    {items.length > 0 && <>
+      <strong>{heading}</strong>
+      <ul>{items.map(item => <li key={item}>{item}</li>)}</ul>
+    </>}
+  </div>
+}
+
 export function Empty({ title, description }: { title: string; description: string }) {
   return <Card className="state-panel"><BarChart3 size={24} /><strong>{title}</strong><p>{description}</p></Card>
 }

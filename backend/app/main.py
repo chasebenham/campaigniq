@@ -13,6 +13,9 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app import analytics
 from app.ai_api import router as ai_router
+from app.briefs.api import router as brief_router
+from app.budget.api import router as budget_router
+from app.budget.benchmarks import BudgetError
 from app.config import Settings
 from app.db import get_db
 from app.detection_api import router as detection_router
@@ -28,7 +31,7 @@ app = FastAPI(title="CampaignIQ", version="1.0.0", description="Northstar Outfit
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[Settings().frontend_origin],
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "PUT"],
     allow_headers=["Content-Type"],
 )
 api = APIRouter(prefix="/api/v1")
@@ -74,6 +77,11 @@ async def handle_csv_error(request, error):
 @app.exception_handler(StalePreview)
 async def handle_stale_preview(request, error):
     return error_response(409, "STALE_PREVIEW", str(error))
+
+
+@app.exception_handler(BudgetError)
+async def handle_budget_error(request, error):
+    return error_response(error.status, error.code, str(error))
 
 
 @app.exception_handler(SQLAlchemyError)
@@ -199,4 +207,6 @@ def get_import(import_id: EntityID, db: DB, pagination: Pagination) -> ImportDet
 
 api.include_router(detection_router)
 api.include_router(ai_router)
+api.include_router(budget_router)
+api.include_router(brief_router)
 app.include_router(api)

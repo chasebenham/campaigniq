@@ -1,6 +1,6 @@
 # CampaignIQ
 
-CampaignIQ is a marketing performance workspace for **Northstar Outfitters**, a fictional direct-to-consumer outdoor apparel brand. It supports standardized Google Ads and Meta Ads imports, purchase-acquisition metrics, deterministic Insights, and an optional AI Analyst. The fictional business has a $120,000 monthly marketing budget and reports in USD.
+CampaignIQ is a marketing performance workspace for **Northstar Outfitters**, a fictional direct-to-consumer outdoor apparel brand. It supports standardized Google Ads and Meta Ads imports, purchase-acquisition metrics, deterministic Insights, an optional AI Analyst, and hypothetical budget modeling. The fictional business has a $120,000 monthly marketing budget and reports in USD.
 
 The sample portfolio has 16 campaigns and 1,431 observed campaign-days from August 25 through November 22, 2026. The seed and sample CSVs are fictional. Reports identify the presence of seed records, and the product distinguishes platform-attributed purchase credit from customer counts.
 
@@ -52,6 +52,14 @@ The [CSV contract](docs/csv-import.md) specifies the accepted headers, reporting
 
 Open **Insights** and select **Run Performance Analysis**. Review the mature reporting window, finding evidence, and per-run suppressions. Detection works with AI disabled. To request a model interpretation of a current finding, enable the server configuration, then use **Analyze with AI** in the AI Analyst workspace. [Detection methodology](docs/detection-methodology.md) · [AI setup](docs/ai-analyst.md)
 
+## Model a budget scenario
+
+Open **Budget Lab**, choose a mature reference period and at least two eligible campaigns, then set and balance a hypothetical budget. Review the three assumption cases, attribution context, and extrapolation warnings. Save the result to reopen, clone, or compare alternatives. Apply migration `20261124_0006` when upgrading a workspace. [Workflow and API](docs/budget-lab.md)
+
+## Create an executive strategy brief
+
+Install the updated backend requirements and apply migration `20261124_0007`. Open **Strategy Briefs**, choose dated evidence and optional saved AI and budget sources, then preview and save. Open the saved version to export its PDF or revise its commentary. [Report workflow and sample](docs/strategy-briefs.md)
+
 ## Run tests and build
 
 Set the test database URL to the loopback PostgreSQL service or another disposable test server where the role can create schemas. The integration tests create and drop unique schemas.
@@ -79,4 +87,9 @@ Omit `CAMPAIGNIQ_TEST_DATABASE_URL` for the fast SQLite and pure-Python tests. T
 - [Detection policies](docs/detection-policies.md)
 - [Fictional detection evaluation](docs/detection-evaluation.md)
 - [AI Analyst evaluation](docs/ai-evaluation.md)
+- [Budget Lab methodology](docs/budget-methodology.md)
+- [Budget Lab verification](docs/budget-scenario-tests.md)
+- [Report methodology](docs/report-methodology.md)
+- [PDF export](docs/pdf-export.md)
+- [Strategy Brief verification](docs/strategy-brief-tests.md)
 - [Phase roadmap](docs/phase-roadmap.md)
